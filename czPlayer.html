@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>&laquo;Крестики-нолики&raquo; на двоих игроков</title>
+	<meta charset="utf-8">
+	<style type="text/css">
+
+		body 
+		{
+			background-image: url(background.png);
+		}
+
+		div#main 
+		{
+			vertical-align: middle;
+			margin-top: 120px;
+		}
+
+		h2 
+		{
+			font-family: Calibri;
+			color: green;
+		}
+
+		table#field 
+		{
+			width: 225px;
+			height: 225px;
+			border: 1px solid black;
+			border-collapse: collapse;
+			background-color: #cad3de;
+		}
+
+		table#field td 
+		{
+			width: 25px;
+			height: 25px;
+			border: 1px solid black;
+			text-align: center;
+			vertical-align: middle;
+			font-size: 20px;
+			font-family: Arial;
+			user-select: none;
+		}
+
+		table#field td:hover 
+		{
+			background-color: #bab5b5;
+			cursor: pointer;
+		}
+
+		table#resultsNum 
+		{
+			width: 160px;
+			height: 99px;
+			border: 1px solid black;
+			border-collapse: collapse;
+			margin: 5px;
+		}
+
+		table#resultsNum td#winX, 
+		table#resultsNum td#winO, 
+		table#resultsNum td#drawn 
+		{
+			width: 20px;
+			text-align: center;
+		}
+
+		table#resultsNum td
+		{
+			width: 100px;
+			height: 33px;
+			border: 1px solid black;
+			background-color: #bdffde;
+		}
+
+		#reset 
+		{
+			background-color: #d9b6b6;
+			border-color: #d9b6b6;
+			outline: none;
+			cursor: pointer;
+		}
+
+		div#instruction 
+		{
+			width: 500px;
+			text-align: justify;
+			font-size: 18px;
+			font-family: Calibri;
+			border: 1px solid red;
+			padding: 15px;
+		}
+
+		#onMainPage 
+		{
+			margin-top: 15px;
+			border-radius: 10px;
+			background-color: #ace3b2;
+			border-color: #ace3b2;
+			outline: none;
+			cursor: pointer;
+		}
+
+		div#footer 
+		{
+			text-align: right;
+			background: #97c0C4;
+			padding-top: 5px;
+			padding-bottom: 10px;
+		    padding-right: 25px;
+		    padding-left: 25px;
+		    bottom: 0;
+		    right: 0;
+		    position: absolute;
+		}
+
+		div#footer a:visited 
+		{
+			color: #965d39;
+		}
+
+	</style>
+</head>
+<body>
+	<div align="center" id="main">
+		<h2>Крестики-нолики на двоих игроков</h2>
+		<table id="field">
+			<tr>
+				<td class="cell"></td>
+				<td class="cell"></td>
+				<td class="cell"></td>
+			</tr>
+			<tr>
+				<td class="cell"></td>
+				<td class="cell"></td>
+				<td class="cell"></td>
+			</tr>
+			<tr>
+				<td class="cell"></td>
+				<td class="cell"></td>
+				<td class="cell"></td>
+			</tr>
+		</table>
+		
+		<div>
+			<p id="round">Сейчас ходит Х</p>
+			<p id="result"></p>
+			<input type="submit" value="Начать заново" id="reset">
+		</div>
+
+		<div>
+			<table id="resultsNum">
+				<tr>
+					<td>Выиграл Х:</td>
+					<td id="winX"></td>
+				</tr>
+				<tr>
+					<td>Выиграл О:</td>
+					<td id="winO"></td>
+				</tr>
+				<tr>
+					<td>Ничья:</td>
+					<td id="drawn"></td>
+				</tr>
+			</table>
+		</div>
+
+		<div id="instruction">
+			<p style="text-align: center; font-size: 22px; font-style: italic;">Инструкция по игре</p>
+			<p>Игроки делают ход по очереди. Под полем игры высвечивается подсказка, кто делает очередной ход.
+			В новой игре первый ход делает игрок, победивший в предыдущей игре.
+			Если игра закончилась ничьёй, первый ход делает тот, кто ходил первым в предыдущей игре.
+			Чтобы начать очередную партию, нажмите на кнопку "Начать заново". Если Вы хотите начать всю игру заново,
+			достаточно просто обновить страницу. Удачи!</p>
+		</div>
+
+		<a href="index.html" id="hrefOnMainPage"><input type="submit" value="Вернуться на главную страницу" id="onMainPage"></a>
+
+		<div id="footer">
+			&copy;&nbsp;Дмитрий Терентьев
+		</div>
+	</div>
+</body>
+<script type="text/javascript">
+	var cells = document.getElementsByClassName('cell'); // ячейки поля игры (псевдомассив, перебирается циклом)
+	var round = document.getElementById('round'); // абзац с информацией о том, чей сейчас ход
+	var result = document.getElementById('result'); // абзац с информацией об исходе игры
+	var reset = document.getElementById('reset'); // кнопка для сброса (начать заново)
+	var winX = document.getElementById('winX'); // ячейка для счётчика побед крестиков
+	var winO = document.getElementById('winO'); // ячейка для счётчика побед ноликов
+	var drawn = document.getElementById('drawn'); // ячейка для счётчика ничьих
+	var flagX = 0; // флаг, указывающий на то, что следующий ход делает X
+	var flagO = 1; // флаг, указывающий на то, что следующий ход делает O
+	var flag = 0; // счётчик количества заполненных ячеек
+	var end = 0; // флаг, указывающий на окончание игры (если равен 1)
+
+	
+	reset.addEventListener('click', function() {
+		for(var i = 0; i < cells.length; i++)
+			cells[i].innerHTML = '';
+		round.style.display = 'block';
+		if(!flagX)
+			round.innerHTML = 'Сейчас ходит X';
+		else
+			round.innerHTML = 'Сейчас ходит O';
+		result.style.display = 'none';
+		end = 0;
+		flag = 0;
+	});
+
+	for(var i = 0; i < cells.length; i++) {
+		cells[i].addEventListener('click', fill);
+	}
+
+	function fill() {
+		if((this.innerHTML != 'X') && (this.innerHTML != 'O') && !end) {	
+			flag++;
+			if(!flagX && ((this.innerHTML != 'X') || (this.innerHTML != 'O'))) {
+				this.innerHTML = 'X';
+				flagX = 1;
+				flagO = 0;
+				round.innerHTML = 'Сейчас ходит O';
+			}
+			else if((cells[i] != 'X') || (cells[i] != 'O')) {
+				this.innerHTML = 'O';
+				flagX = 0;
+				flagO = 1;
+				round.innerHTML = 'Сейчас ходит X';
+			}
+			else
+				return false;
+		}
+		
+		if(((cells[0].innerHTML == cells[1].innerHTML && cells[1].innerHTML == cells[2].innerHTML &&  cells[2].innerHTML == "X") || 
+					(cells[3].innerHTML == cells[4].innerHTML && cells[4].innerHTML == cells[5].innerHTML &&  cells[5].innerHTML == "X") || 
+					(cells[6].innerHTML == cells[7].innerHTML && cells[7].innerHTML == cells[8].innerHTML &&  cells[8].innerHTML == "X") || 
+					(cells[0].innerHTML == cells[3].innerHTML && cells[3].innerHTML == cells[6].innerHTML &&  cells[6].innerHTML == "X") || 
+					(cells[1].innerHTML == cells[4].innerHTML && cells[4].innerHTML == cells[7].innerHTML &&  cells[7].innerHTML == "X") || 
+					(cells[2].innerHTML == cells[5].innerHTML && cells[5].innerHTML == cells[8].innerHTML &&  cells[8].innerHTML == "X") || 
+					(cells[0].innerHTML == cells[4].innerHTML && cells[4].innerHTML == cells[8].innerHTML &&  cells[8].innerHTML == "X") || 
+					(cells[2].innerHTML == cells[4].innerHTML && cells[4].innerHTML == cells[6].innerHTML &&  cells[6].innerHTML == "X")) && !end) {
+			result.style.display = 'block';
+			result.innerHTML = 'Победил X!';
+			round.style.display = 'none';
+			flagX = 0;
+			flagO = 1;
+			winX.innerHTML++;
+			end = 1;
+			return false;
+		}
+
+		if(((cells[0].innerHTML == cells[1].innerHTML && cells[1].innerHTML == cells[2].innerHTML &&  cells[2].innerHTML == "O") || 
+					(cells[3].innerHTML == cells[4].innerHTML && cells[4].innerHTML == cells[5].innerHTML &&  cells[5].innerHTML == "O") || 
+					(cells[6].innerHTML == cells[7].innerHTML && cells[7].innerHTML == cells[8].innerHTML &&  cells[8].innerHTML == "O") || 
+					(cells[0].innerHTML == cells[3].innerHTML && cells[3].innerHTML == cells[6].innerHTML &&  cells[6].innerHTML == "O") || 
+					(cells[1].innerHTML == cells[4].innerHTML && cells[4].innerHTML == cells[7].innerHTML &&  cells[7].innerHTML == "O") || 
+					(cells[2].innerHTML == cells[5].innerHTML && cells[5].innerHTML == cells[8].innerHTML &&  cells[8].innerHTML == "O") || 
+					(cells[0].innerHTML == cells[4].innerHTML && cells[4].innerHTML == cells[8].innerHTML &&  cells[8].innerHTML == "O") || 
+					(cells[2].innerHTML == cells[4].innerHTML && cells[4].innerHTML == cells[6].innerHTML &&  cells[6].innerHTML == "O")) && !end) {
+			result.style.display = 'block';
+			result.innerHTML = 'Победил O!';
+			round.style.display = 'none';
+			flagO = 0;
+			flagX = 1;
+			winO.innerHTML++;
+			end = 1;
+			return false;
+		}
+		
+		if((flag == 9) && !end) {
+			result.style.display = 'block';
+			result.innerHTML = 'Ничья!';
+			round.style.display = 'none';
+			drawn.innerHTML++;
+			end = 1;
+			return false;
+		}
+	}
+</script>
+</html>
